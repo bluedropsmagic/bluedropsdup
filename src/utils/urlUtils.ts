@@ -31,7 +31,8 @@ export const getTrackingParams = (): UTMParams => {
     'fbclid', 'gclid', 'ttclid', 'twclid', 'li_fat_id',
     'affiliate_id', 'sub_id', 'click_id', 'transaction_id',
     'order_id', 'customer_id', 'email', 'phone',
-    'first_name', 'last_name', 'address', 'city', 'state', 'zip', 'country'
+    'first_name', 'last_name', 'address', 'city', 'state', 'zip', 'country',
+    'ad_name', 'ad_pid', 'campaign_pid', 'original_filename'
   ];
   
   trackingKeys.forEach(key => {
