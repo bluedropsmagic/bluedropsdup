@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="https://i.imgur.com/93enhix.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BAKING SODA TRICK REVEAL</title>
+    
+    <!-- Hotjar será carregado dinamicamente por página -->
+
+    <!-- ✅ CORRECT: Utmify Tracking Code -->
+    <script>
+      window.pixelId = "681eb087803be4de5c3bd68b";
+      var a = document.createElement("script");
+      a.setAttribute("async", "");
+      a.setAttribute("defer", "");
+      a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+      document.head.appendChild(a);
+      
+      // ✅ Enhanced Utmify integration with fallback
+      window.addEventListener('utmify-track', function(event) {
+        console.log('📊 Utmify fallback event received:', event.detail);
+        
+        // Try to send via Utmify if available
+        if (typeof window.utmify === 'function') {
+          window.utmify('track', event.detail.event, event.detail);
+        } else {
+          // Store for later when Utmify loads
+          window.utmifyQueue = window.utmifyQueue || [];
+          window.utmifyQueue.push(event.detail);
+        }
+      });
+      
+      // Process queued events when Utmify loads
+      var checkUtmify = setInterval(function() {
+        if (typeof window.utmify === 'function' && window.utmifyQueue) {
+          console.log('📊 Processing queued Utmify events:', window.utmifyQueue.length);
+          window.utmifyQueue.forEach(function(eventData) {
+            window.utmify('track', eventData.event, eventData);
+          });
+          window.utmifyQueue = [];
+          clearInterval(checkUtmify);
+        }
+      }, 1000);
+    </script>
+
+    <!-- ✅ CORRECT: Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1205864517252800');
+    fbq('track', 'PageView');
+    </script>
+
+    <!-- ✅ RedTrack Universal Script -->
+    <script src="https://rdt.obluemagicdrops.com/uniclick.js?attribution=lastpaid&cookiedomain=elaborate-smakager-4592e9.netlify.app&cookieduration=90&defaultcampaignid=68685bcb51f1690d1f917171&regviewonce=false"></script>
+    
+  </head>
+  <body>
+    <!-- ✅ CORRECT: Meta Pixel noscript -->
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1205864517252800&ev=PageView&noscript=1"
+    /></noscript>
+    
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
