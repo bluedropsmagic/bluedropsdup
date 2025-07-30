@@ -108,7 +108,8 @@ export const SecondUpsellPage: React.FC<SecondUpsellPageProps> = ({ variant }) =
       'order_id', 'customer_id', 'transaction_id', 'email', 'phone',
       'first_name', 'last_name', 'address', 'city', 'state', 'zip',
       'country', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term',
-      'utm_content', 'fbclid', 'gclid', 'affiliate_id', 'sub_id'
+      'utm_content', 'fbclid', 'gclid', 'affiliate_id', 'sub_id',
+      'ad_name', 'ad_pid', 'campaign_pid', 'original_filename'
     ];
 
     cartPandaParams.forEach(param => {
