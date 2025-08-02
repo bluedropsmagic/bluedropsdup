@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { initializeRedTrack } from '../utils/redtrackIntegration';
 import { initializeFacebookPixelTracking } from '../utils/facebookPixelTracking';
+import { initializeFTTrack, cleanupFTTrack } from '../utils/fttackIntegration';
 import { trackInitiateCheckout } from '../utils/facebookPixelTracking';
 import { Star, Shield, Truck, CreditCard, CheckCircle, Clock, Award } from 'lucide-react';
 
@@ -25,6 +26,13 @@ export const LandingPage: React.FC = () => {
   useEffect(() => {
     initializeRedTrack();
     initializeFacebookPixelTracking();
+    
+    initializeFTTrack('landing');
+
+    // Cleanup on unmount
+    return () => {
+      cleanupFTTrack('landing');
+    };
   }, []);
 
   const handlePurchase = (packageType: 'premium' | 'regular' | 'trial') => {

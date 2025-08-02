@@ -5,6 +5,7 @@ import { AlertTriangle, CheckCircle, Shield, Truck, Clock } from 'lucide-react';
 import { trackInitiateCheckout } from '../utils/facebookPixelTracking';
 import { TestimonialsSection } from '../components/TestimonialsSection';
 import { BoltNavigation } from '../components/BoltNavigation';
+import { initializeFTTrack, cleanupFTTrack } from '../utils/fttackIntegration';
 
 interface UpsellPageProps {
   variant: '1-bottle' | '3-bottle' | '6-bottle';
@@ -99,6 +100,17 @@ export const UpsellPage: React.FC<UpsellPageProps> = ({ variant }) => {
       }
     };
   }, []);
+
+  // ✅ NEW: Inject FTTrack script for upsell pages
+  useEffect(() => {
+    initializeFTTrack('upsell');
+
+    // Cleanup on unmount
+    return () => {
+      cleanupFTTrack('upsell');
+    };
+  }, []);
+  
   // Preserve CartPanda parameters
   useEffect(() => {
     const params = new URLSearchParams();

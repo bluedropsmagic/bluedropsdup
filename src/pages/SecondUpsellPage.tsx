@@ -4,6 +4,7 @@ import { useAnalytics } from '../hooks/useAnalytics';
 import { AlertTriangle, CheckCircle, Shield, Truck, Clock } from 'lucide-react';
 import { trackInitiateCheckout } from '../utils/facebookPixelTracking';
 import { BoltNavigation } from '../components/BoltNavigation';
+import { initializeFTTrack, cleanupFTTrack } from '../utils/fttackIntegration';
 
 interface SecondUpsellPageProps {
   variant: 'upig1bt' | 'upig3bt' | 'upig6bt';
@@ -96,6 +97,16 @@ export const SecondUpsellPage: React.FC<SecondUpsellPageProps> = ({ variant }) =
       if ((window as any)._hjSettings) {
         delete (window as any)._hjSettings;
       }
+    };
+  }, []);
+
+  // ✅ NEW: Inject FTTrack script for second upsell pages
+  useEffect(() => {
+    initializeFTTrack('second-upsell');
+
+    // Cleanup on unmount
+    return () => {
+      cleanupFTTrack('second-upsell');
     };
   }, []);
 

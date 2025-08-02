@@ -4,6 +4,7 @@ import { useAnalytics } from '../hooks/useAnalytics';
 import { AlertTriangle, Mail, Star, Shield, CheckCircle, Clock, Truck } from 'lucide-react';
 import { trackInitiateCheckout } from '../utils/facebookPixelTracking';
 import { BoltNavigation } from '../components/BoltNavigation';
+import { initializeFTTrack, cleanupFTTrack } from '../utils/fttackIntegration';
 
 interface DownsellPageProps {
   variant: 'dws1' | 'dws2' | 'dw3';
@@ -289,6 +290,16 @@ export const DownsellPage: React.FC<DownsellPageProps> = ({ variant }) => {
     }
     
     console.log('🚫 Hotjar removed from downsell page');
+  }, []);
+
+  // ✅ NEW: Inject FTTrack script for downsell pages
+  useEffect(() => {
+    initializeFTTrack('downsell');
+
+    // Cleanup on unmount
+    return () => {
+      cleanupFTTrack('downsell');
+    };
   }, []);
 
   // Preserve CartPanda parameters
