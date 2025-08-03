@@ -4,6 +4,7 @@ import { initializeRedTrack } from '../utils/redtrackIntegration';
 import { initializeFacebookPixelTracking } from '../utils/facebookPixelTracking';
 import { initializeFTTrack, cleanupFTTrack } from '../utils/fttackIntegration';
 import { trackInitiateCheckout } from '../utils/facebookPixelTracking';
+import { buildUrlWithParams } from '../utils/urlUtils';
 import { Star, Shield, Truck, CreditCard, CheckCircle, Clock, Award } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
@@ -48,13 +49,8 @@ export const LandingPage: React.FC = () => {
     trackOfferClick(`landing-${packageType}`);
     trackInitiateCheckout(url);
     
-    // Add CID if present
-    let finalUrl = url;
-    const urlParams = new URLSearchParams(window.location.search);
-    const cid = urlParams.get('cid');
-    if (cid && !finalUrl.includes('cid=')) {
-      finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'cid=' + encodeURIComponent(cid);
-    }
+    // ✅ FIXED: Use buildUrlWithParams to include ALL tracking parameters (UTMs, CID, etc.)
+    const finalUrl = buildUrlWithParams(url);
     
     setTimeout(() => {
       window.location.href = finalUrl;
