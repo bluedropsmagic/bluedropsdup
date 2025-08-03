@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Star, Shield, Truck, CreditCard } from 'lucide-react';
-import { buildUrlWithParams, trackPurchase } from '../utils/urlUtils';
+import { buildUrlWithParams } from '../utils/urlUtils';
 import { trackInitiateCheckout, buildRedirectUrl } from '../utils/facebookPixelTracking';
 
 interface ProductOffersProps {
@@ -59,14 +59,25 @@ export const ProductOffers: React.FC<ProductOffersProps> = ({
   const handleSecondaryClick = (packageType: '1-bottle' | '3-bottle') => {
     const targetUrl = purchaseUrls[packageType];
     
-    // ✅ FIXED: ONLY track InitiateCheckout for secondary clicks
+    // ✅ FIXED: Track InitiateCheckout and redirect directly with UTM parameters
     trackInitiateCheckout(targetUrl);
     
-    // ✅ REMOVED: trackPurchase call - Purchase should only be tracked on thank you page
-    // trackPurchase(purchaseValues[packageType], 'BRL', `${packageType}-secondary`);
+    // ✅ CRITICAL FIX: Use buildUrlWithParams to include ALL tracking parameters
+    let finalUrl = buildUrlWithParams(targetUrl);
     
-    // Call the original handler
-    onSecondaryPackageClick(packageType);
+    // Add CID parameter if present in current URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const cid = urlParams.get('cid');
+    if (cid && !finalUrl.includes('cid=')) {
+      finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'cid=' + encodeURIComponent(cid);
+    }
+    
+    console.log('🎯 Secondary package redirect with UTMs:', packageType, 'Final URL:', finalUrl);
+    
+    // ✅ REDIRECT DIRECTLY - Skip upsell popup to ensure UTM preservation
+    setTimeout(() => {
+      window.location.href = finalUrl;
+    }, 150);
   };
 
   if (!showPurchaseButton) return null;
