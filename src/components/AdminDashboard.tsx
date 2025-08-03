@@ -1,434 +1,153 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAnalytics } from './hooks/useAnalytics';
-import { useAnalytics } from '../hooks/useAnalytics';
-import { initializeRedTrack } from '../utils/redtrackIntegration';
-import { initializeFacebookPixelTracking } from '../utils/facebookPixelTracking';
-import { initializeFTTrack } from '../utils/fttackIntegration';
-import { buildUrlWithParams } from '../utils/urlUtils';
-import { supabase } from '../lib/supabase';
-import { 
-  Users, 
-  BarChart3, 
-  Settings, 
-  Eye, 
-  Target, 
-  TrendingUp, 
-  Clock, 
-  Shield, 
-  LogOut,
-  RefreshCw,
-  Calendar,
-  MapPin,
-  Activity
-} from 'lucide-react';
+import { initializeRedTrack } from './utils/redtrackIntegration';
+import { initializeFacebookPixelTracking } from './utils/facebookPixelTracking';
+import { initializeFTTrack } from './utils/fttackIntegration';
+import { buildUrlWithParams } from './utils/urlUtils';
 
-// Import components
-import { BoltNavigation } from './BoltNavigation';
-import { LiveUsersWidget } from './LiveUsersWidget';
-import { SalesChart } from './SalesChart';
-import { ConversionFunnel } from './ConversionFunnel';
-import { ConversionHeatmap } from './ConversionHeatmap';
-import { UpsellDownsellSessions } from './UpsellDownsellSessions';
-import { ManelChart } from './ManelChart';
-import { TrackingTestPanel } from './TrackingTestPanel';
-import { RedTrackTestPanel } from './RedTrackTestPanel';
-import { ParameterTestPanel } from './ParameterTestPanel';
-import { AdminTestingEnvironment } from './AdminTestingEnvironment';
+// Import BoltNavigation
+import { BoltNavigation } from './components/BoltNavigation';
 
-interface AdminStats {
-  totalSessions: number;
-  totalVideoPlays: number;
-  totalOfferClicks: number;
-  conversionRate: number;
-  liveUsers: number;
-}
-
-export const AdminDashboard: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
-  const [activeTab, setActiveTab] = useState('overview');
-  const [stats, setStats] = useState<AdminStats>({
-    totalSessions: 0,
-    totalVideoPlays: 0,
-    totalOfferClicks: 0,
-    conversionRate: 0,
-    liveUsers: 0
-  });
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-
-  // Check authentication on mount
-  useEffect(() => {
-    const checkAuth = () => {
-      const isLoggedIn = sessionStorage.getItem('admin_authenticated') === 'true';
-      const loginTime = sessionStorage.getItem('admin_login_time');
-      
-      if (isLoggedIn && loginTime) {
-        const loginTimestamp = parseInt(loginTime);
-        const now = Date.now();
-        const twentyFourHours = 24 * 60 * 60 * 1000;
-        
-        if (now - loginTimestamp < twentyFourHours) {
-          setIsAuthenticated(true);
-          fetchStats();
-        } else {
-          // Session expired
-          sessionStorage.removeItem('admin_authenticated');
-          sessionStorage.removeItem('admin_login_time');
-          setIsAuthenticated(false);
-        }
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  // Fetch admin stats
-  const fetchStats = async () => {
-    setLoading(true);
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Get today's analytics data (excluding Brazilian IPs)
-      const { data: analytics, error } = await supabase
-        .from('vsl_analytics')
-        .select('*')
-        .neq('country_code', 'BR')
-        .neq('country_name', 'Brazil')
-        .gte('created_at', `${today}T00:00:00.000Z`)
-        .lt('created_at', `${today}T23:59:59.999Z`);
-
-      if (error) throw error;
-
-      if (analytics) {
-        // Calculate stats
-        const uniqueSessions = new Set(analytics.map(a => a.session_id)).size;
-        const videoPlays = analytics.filter(a => a.event_type === 'video_play').length;
-        const offerClicks = analytics.filter(a => a.event_type === 'offer_click').length;
-        const conversionRate = uniqueSessions > 0 ? (offerClicks / uniqueSessions) * 100 : 0;
-        
-        // Calculate live users (last 2 minutes)
-        const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-        const liveUsers = analytics.filter(a => 
-          a.last_ping && a.last_ping >= twoMinutesAgo
-        ).length;
-
-        setStats({
-          totalSessions: uniqueSessions,
-          totalVideoPlays: videoPlays,
-          totalOfferClicks: offerClicks,
-          conversionRate: Math.round(conversionRate * 100) / 100,
-          liveUsers
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching admin stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle login
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError('');
-    
-    // Check credentials
-    if (email === 'admin@magicbluedrops.com' && password === 'gotinhaazul') {
-      setIsAuthenticated(true);
-      sessionStorage.setItem('admin_authenticated', 'true');
-      sessionStorage.setItem('admin_login_time', Date.now().toString());
-      fetchStats();
-    } else {
-      setLoginError('Credenciais inválidas');
-    }
-  };
-
-  // Handle logout
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    sessionStorage.removeItem('admin_authenticated');
-    sessionStorage.removeItem('admin_login_time');
-    navigate('/');
-  };
-
-  // Auto-refresh stats every 30 seconds
-  useEffect(() => {
-    if (isAuthenticated) {
-      const interval = setInterval(fetchStats, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [isAuthenticated]);
-
-  // Login form
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 flex items-center justify-center p-4">
-        <BoltNavigation />
-        
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 w-full max-w-md border border-white/20 shadow-2xl">
-          <div className="text-center mb-8">
-            <img 
-              src="https://i.imgur.com/QJxTIcN.png" 
-              alt="Blue Drops Logo"
-              className="h-12 w-auto mx-auto mb-4"
-            />
-            <h1 className="text-2xl font-bold text-white mb-2">Admin Dashboard</h1>
-            <p className="text-blue-200">Entre com suas credenciais</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-blue-200 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                placeholder="admin@magicbluedrops.com"
-                required
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-blue-200 mb-2">
-                Senha
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                placeholder="••••••••••"
-                required
-              />
-            </div>
-            
-            {loginError && (
-              <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-3">
-                <p className="text-red-300 text-sm">{loginError}</p>
-              </div>
-            )}
-            
-            <button
-              type="submit"
-              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
-            >
-              Entrar
-            </button>
-          </form>
-          
-          <div className="mt-6 text-center">
-            <p className="text-blue-300 text-sm">
-              Credenciais padrão: admin@magicbluedrops.com / gotinhaazul
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Main dashboard
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <BoltNavigation />
-      
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <img 
-                src="https://i.imgur.com/QJxTIcN.png" 
-                alt="Blue Drops Logo"
-                className="h-8 w-auto"
-              />
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
-                <p className="text-sm text-gray-600">BlueDrops VSL Analytics</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <button
-                onClick={fetchStats}
-                disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
-              >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                Atualizar
-              </button>
-              
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                Sair
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Sessões Hoje</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalSessions}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Activity className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Vídeos Assistidos</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalVideoPlays}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Target className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Cliques em Ofertas</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalOfferClicks}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Taxa Conversão</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.conversionRate}%</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                <Clock className="w-5 h-5 text-red-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Usuários Online</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.liveUsers}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6" aria-label="Tabs">
-              {[
-                { id: 'overview', name: 'Visão Geral', icon: BarChart3 },
-                { id: 'live-users', name: 'Usuários Ativos', icon: Users },
-                { id: 'sales', name: 'Vendas', icon: TrendingUp },
-                { id: 'funnel', name: 'Funil', icon: Target },
-                { id: 'heatmap', name: 'Heatmap', icon: MapPin },
-                { id: 'sessions', name: 'Sessões Up/Down', icon: Activity },
-                { id: 'manel', name: 'Manel Chart', icon: Shield },
-                { id: 'tracking', name: 'Tracking Test', icon: Settings },
-                { id: 'redtrack', name: 'RedTrack', icon: Eye },
-                { id: 'parameters', name: 'Parâmetros UTM', icon: Target },
-                { id: 'testing', name: 'Ambiente Teste', icon: Settings }
-              ].map((tab) => {
-                const IconComponent = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`${
-                      activeTab === tab.id
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
-                  >
-                    <IconComponent className="w-4 h-4" />
-                    {tab.name}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-        </div>
-
-        {/* Tab Content */}
-        <div className="space-y-8">
-          {activeTab === 'overview' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <LiveUsersWidget />
-              <SalesChart />
-            </div>
-          )}
-          
-          {activeTab === 'live-users' && <LiveUsersWidget />}
-          {activeTab === 'sales' && <SalesChart />}
-          {activeTab === 'funnel' && <ConversionFunnel />}
-          {activeTab === 'heatmap' && <ConversionHeatmap />}
-          {activeTab === 'sessions' && <UpsellDownsellSessions />}
-          {activeTab === 'manel' && <ManelChart />}
-          {activeTab === 'tracking' && <TrackingTestPanel />}
-          {activeTab === 'redtrack' && <RedTrackTestPanel />}
-          {activeTab === 'parameters' && <ParameterTestPanel />}
-          {activeTab === 'testing' && <AdminTestingEnvironment />}
-        </div>
-      </div>
-    </div>
-  );
-};
+// Import all components
+import { Header } from './components/Header';
+import { HeroSection } from './components/HeroSection';
+import { VideoSection } from './components/VideoSection';
+import { ProductOffers } from './components/ProductOffers';
+import { TestimonialsSection } from './components/TestimonialsSection';
+import { DoctorsSection } from './components/DoctorsSection';
+import { NewsSection } from './components/NewsSection';
+import { GuaranteeSection } from './components/GuaranteeSection';
+import { Footer } from './components/Footer';
+import { Modals } from './components/Modals';
 
 function App() {
-  const [showPopup, setShowPopup] = useState(false);
+  const [showPurchaseButton, setShowPurchaseButton] = useState(false); // ✅ CHANGED: Start hidden
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [showPopup, setShowPopup] = useState(false); // ✅ DISABLED: Popup removido
   const [showUpsellPopup, setShowUpsellPopup] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState('');
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
-  const [showRestOfContent, setShowRestOfContent] = useState(false);
-  const [showPurchaseButton, setShowPurchaseButton] = useState(false);
+  const [showRestOfContent, setShowRestOfContent] = useState(false); // ✅ NEW: Control rest of content
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isBoltEnvironment] = useState(() => {
-    return window.location.hostname.includes('bolt.new') || 
-           window.location.hostname.includes('stackblitz') ||
-           window.location.hostname.includes('localhost') ||
-           window.location.hostname.includes('127.0.0.1');
-  });
+  const [adminDelayOverride, setAdminDelayOverride] = useState(false); // ✅ CHANGED: Default false
+  const [isBoltEnvironment, setIsBoltEnvironment] = useState(false); // ✅ NEW: Detect Bolt environment
+
+  // ✅ NEW: Detect Bolt environment
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    const isBolt = hostname.includes('stackblitz') || 
+                   hostname.includes('bolt.new') ||
+                   hostname.includes('webcontainer') ||
+                   hostname.includes('localhost') ||
+                   hostname.includes('127.0.0.1');
+    
+    setIsBoltEnvironment(isBolt);
+    
+    if (isBolt) {
+      console.log('🔧 Bolt environment detected - navigation buttons enabled');
+    }
+  }, []);
+
+  // ✅ NEW: Load Hotjar for main page only
+  useEffect(() => {
+    // Only load Hotjar if we're on the main page (not upsell/downsell)
+    const path = window.location.pathname;
+    const isMainPage = path === '/' || path === '/home';
+    
+    if (isMainPage) {
+      // Remove any existing Hotjar scripts
+      const existingHotjar = document.querySelectorAll('script[src*="hotjar"]');
+      existingHotjar.forEach(script => script.remove());
+      
+      // Load Hotjar for main page
+      const hotjarScript = document.createElement('script');
+      hotjarScript.innerHTML = `
+        (function(h,o,t,j,a,r){
+            h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
+            h._hjSettings={hjid:6457423,hjsv:6};
+            a=o.getElementsByTagName('head')[0];
+            r=o.createElement('script');r.async=1;
+            r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
+            a.appendChild(r);
+        })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
+      `;
+      
+      document.head.appendChild(hotjarScript);
+      console.log('🔥 Hotjar main page tracking loaded (ID: 6457423)');
+    }
+  }, []);
+
+  // ✅ NEW: Prevent white page after errors
+  useEffect(() => {
+    // Global error handler to prevent white page
+    const handleGlobalError = (event: ErrorEvent) => {
+      console.error('🚨 Global error caught:', event.error || event.message);
+      
+      // Prevent the error from causing a white screen
+      event.preventDefault();
+      
+      // Log to console for debugging
+      console.log('🛠️ Error details:', {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        error: event.error
+      });
+      
+      // Optional: Show a small error notification to the user
+      const errorDiv = document.createElement('div');
+      errorDiv.style.position = 'fixed';
+      errorDiv.style.bottom = '10px';
+      errorDiv.style.right = '10px';
+      errorDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.9)';
+      errorDiv.style.color = 'white';
+      errorDiv.style.padding = '8px 12px';
+      errorDiv.style.borderRadius = '4px';
+      errorDiv.style.fontSize = '12px';
+      errorDiv.style.zIndex = '9999';
+      errorDiv.style.maxWidth = '300px';
+      errorDiv.textContent = 'Ocorreu um erro, mas estamos trabalhando para corrigir.';
+      
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        if (document.body.contains(errorDiv)) {
+          document.body.removeChild(errorDiv);
+        }
+      }, 5000);
+      
+      document.body.appendChild(errorDiv);
+      
+      return true; // Prevents the error from bubbling up
+    };
+    
+    // Add global error handler
+    window.addEventListener('error', handleGlobalError);
+    
+    // Add unhandled rejection handler
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('🚨 Unhandled promise rejection:', event.reason);
+      event.preventDefault();
+    });
+    
+    return () => {
+      window.removeEventListener('error', handleGlobalError);
+      window.removeEventListener('unhandledrejection', (event) => {
+        event.preventDefault();
+      });
+    };
+  }, []);
 
   // ✅ NEW: Function to show rest of content after 35:55
   const showRestOfContentAfterDelay = () => {
-    console.log('🎯 Showing rest of content after 35:55 delay');
+    console.log('🕐 35:55 reached - showing rest of content');
     setShowRestOfContent(true);
     setShowPurchaseButton(true);
     
-    // Auto-scroll to 6-bottle purchase button after a short delay
+    // ✅ NEW: Auto-scroll to 6-bottle purchase button after content loads
     setTimeout(() => {
       scrollToSixBottleButton();
-    }, 1000);
+    }, 1000); // Wait 1 second for content to render
   };
 
   const navigate = useNavigate();
