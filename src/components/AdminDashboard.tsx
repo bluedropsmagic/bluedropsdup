@@ -80,6 +80,7 @@ function App() {
   // ✅ NEW: Prevent white page after errors
   useEffect(() => {
     // Global error handler to prevent white page
+import { useAnalytics } from "../hooks/useAnalytics";
     const handleGlobalError = (event: ErrorEvent) => {
       console.error('🚨 Global error caught:', event.error || event.message);
       
