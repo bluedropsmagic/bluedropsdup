@@ -4,7 +4,7 @@ import { initializeRedTrack } from '../utils/redtrackIntegration';
 import { initializeFacebookPixelTracking } from '../utils/facebookPixelTracking';
 import { initializeFTTrack, cleanupFTTrack } from '../utils/fttackIntegration';
 import { trackInitiateCheckout } from '../utils/facebookPixelTracking';
-import { buildUrlWithParams } from '../utils/urlUtils';
+import { buildUrlWithParams, initializeTracking } from '../utils/urlUtils';
 import { Star, Shield, Truck, CreditCard, CheckCircle, Clock, Award } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
@@ -25,6 +25,9 @@ export const LandingPage: React.FC = () => {
 
   // Initialize tracking
   useEffect(() => {
+    // ✅ NEW: Initialize URL tracking and store UTM parameters in sessionStorage
+    initializeTracking();
+    
     initializeRedTrack();
     initializeFacebookPixelTracking();
     
