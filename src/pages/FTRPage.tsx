@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { initializeRedTrack } from '../utils/redtrackIntegration';
 import { initializeFacebookPixelTracking } from '../utils/facebookPixelTracking';
+import { buildUrlWithParams } from '../utils/urlUtils';
 
 // Import BoltNavigation
 import { BoltNavigation } from '../components/BoltNavigation';
@@ -793,8 +794,11 @@ function FTRPage() {
       '6-bottle': 'https://pagamento.paybluedrops.com/checkout/176849703:1'
     };
     
+    // ✅ FIXED: Use buildUrlWithParams to include ALL tracking parameters (UTMs, CID, etc.)
+    const finalUrl = buildUrlWithParams(links[packageType]);
+    
     // Open in same tab instead of new tab
-    window.location.href = links[packageType];
+    window.location.href = finalUrl;
   };
 
   const handleUpsellAccept = () => {
