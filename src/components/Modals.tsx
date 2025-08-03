@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 import { trackInitiateCheckout } from '../utils/facebookPixelTracking';
+import { buildUrlWithParams } from '../utils/urlUtils';
 
 interface ModalsProps {
   showPopup: boolean;
@@ -70,13 +71,8 @@ export const Modals: React.FC<ModalsProps> = ({
       // Track InitiateCheckout for the original product
       trackInitiateCheckout(targetUrl);
       
-      // Add CID parameter if present
-      let finalUrl = targetUrl;
-      const urlParams = new URLSearchParams(window.location.search);
-      const cid = urlParams.get('cid');
-      if (cid && !finalUrl.includes('cid=')) {
-        finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'cid=' + encodeURIComponent(cid);
-      }
+      // ✅ FIXED: Use buildUrlWithParams to include ALL tracking parameters
+      const finalUrl = buildUrlWithParams(targetUrl);
       
       // Small delay to ensure tracking is sent
       setTimeout(() => {

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { AlertTriangle, Mail, Star, Shield, CheckCircle, Clock, Truck } from 'lucide-react';
 import { trackInitiateCheckout } from '../utils/facebookPixelTracking';
+import { buildUrlWithParams } from '../utils/urlUtils';
 import { BoltNavigation } from '../components/BoltNavigation';
 import { initializeFTTrack, cleanupFTTrack } from '../utils/fttackIntegration';
 
@@ -382,15 +383,11 @@ export const DownsellPage: React.FC<DownsellPageProps> = ({ variant }) => {
     trackInitiateCheckout(content.acceptUrl);
     trackOfferClick(`downsell-${variant}-accept`);
     
-    let url = cartParams ? `${content.acceptUrl}&${cartParams}` : content.acceptUrl;
-    const urlParams = new URLSearchParams(window.location.search);
-    const cid = urlParams.get('cid');
-    if (cid && !url.includes('cid=')) {
-      url += (url.includes('?') ? '&' : '?') + 'cid=' + encodeURIComponent(cid);
-    }
+    // ✅ FIXED: Use buildUrlWithParams to include ALL tracking parameters
+    const finalUrl = buildUrlWithParams(content.acceptUrl);
     
     setTimeout(() => {
-      window.location.href = url;
+      window.location.href = finalUrl;
     }, 150);
   };
 
@@ -398,15 +395,11 @@ export const DownsellPage: React.FC<DownsellPageProps> = ({ variant }) => {
     trackInitiateCheckout(content.rejectUrl);
     trackOfferClick(`downsell-${variant}-reject`);
     
-    let url = cartParams ? `${content.rejectUrl}&${cartParams}` : content.rejectUrl;
-    const urlParams = new URLSearchParams(window.location.search);
-    const cid = urlParams.get('cid');
-    if (cid && !url.includes('cid=')) {
-      url += (url.includes('?') ? '&' : '?') + 'cid=' + encodeURIComponent(cid);
-    }
+    // ✅ FIXED: Use buildUrlWithParams to include ALL tracking parameters
+    const finalUrl = buildUrlWithParams(content.rejectUrl);
     
     setTimeout(() => {
-      window.location.href = url;
+      window.location.href = finalUrl;
     }, 150);
   };
 

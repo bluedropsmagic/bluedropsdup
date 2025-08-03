@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { AlertTriangle, CheckCircle, Shield, Truck, Clock } from 'lucide-react';
 import { trackInitiateCheckout } from '../utils/facebookPixelTracking';
+import { buildUrlWithParams } from '../utils/urlUtils';
 import { TestimonialsSection } from '../components/TestimonialsSection';
 import { BoltNavigation } from '../components/BoltNavigation';
 import { initializeFTTrack, cleanupFTTrack } from '../utils/fttackIntegration';
@@ -306,15 +307,11 @@ export const UpsellPage: React.FC<UpsellPageProps> = ({ variant }) => {
     trackInitiateCheckout(content.acceptUrl);
     trackOfferClick(`upsell-${variant}-accept`);
     
-    let url = cartParams ? `${content.acceptUrl}&${cartParams}` : content.acceptUrl;
-    const urlParams = new URLSearchParams(window.location.search);
-    const cid = urlParams.get('cid');
-    if (cid && !url.includes('cid=')) {
-      url += (url.includes('?') ? '&' : '?') + 'cid=' + encodeURIComponent(cid);
-    }
+    // ✅ FIXED: Use buildUrlWithParams to include ALL tracking parameters
+    const finalUrl = buildUrlWithParams(content.acceptUrl);
     
     setTimeout(() => {
-      window.location.href = url;
+      window.location.href = finalUrl;
     }, 150);
   };
 
@@ -322,15 +319,11 @@ export const UpsellPage: React.FC<UpsellPageProps> = ({ variant }) => {
     trackInitiateCheckout(content.rejectUrl);
     trackOfferClick(`upsell-${variant}-reject`);
     
-    let url = cartParams ? `${content.rejectUrl}&${cartParams}` : content.rejectUrl;
-    const urlParams = new URLSearchParams(window.location.search);
-    const cid = urlParams.get('cid');
-    if (cid && !url.includes('cid=')) {
-      url += (url.includes('?') ? '&' : '?') + 'cid=' + encodeURIComponent(cid);
-    }
+    // ✅ FIXED: Use buildUrlWithParams to include ALL tracking parameters
+    const finalUrl = buildUrlWithParams(content.rejectUrl);
     
     setTimeout(() => {
-      window.location.href = url;
+      window.location.href = finalUrl;
     }, 150);
   };
 

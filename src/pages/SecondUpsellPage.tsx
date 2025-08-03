@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { AlertTriangle, CheckCircle, Shield, Truck, Clock } from 'lucide-react';
 import { trackInitiateCheckout } from '../utils/facebookPixelTracking';
+import { buildUrlWithParams } from '../utils/urlUtils';
 import { BoltNavigation } from '../components/BoltNavigation';
 import { initializeFTTrack, cleanupFTTrack } from '../utils/fttackIntegration';
 
@@ -377,15 +378,11 @@ export const SecondUpsellPage: React.FC<SecondUpsellPageProps> = ({ variant }) =
     trackInitiateCheckout(content.acceptUrl);
     trackOfferClick(`second-upsell-${variant}-accept`);
     
-    let url = cartParams ? `${content.acceptUrl}&${cartParams}` : content.acceptUrl;
-    const urlParams = new URLSearchParams(window.location.search);
-    const cid = urlParams.get('cid');
-    if (cid && !url.includes('cid=')) {
-      url += (url.includes('?') ? '&' : '?') + 'cid=' + encodeURIComponent(cid);
-    }
+    // ✅ FIXED: Use buildUrlWithParams to include ALL tracking parameters
+    const finalUrl = buildUrlWithParams(content.acceptUrl);
     
     setTimeout(() => {
-      window.location.href = url;
+      window.location.href = finalUrl;
     }, 150);
   };
 
@@ -393,15 +390,11 @@ export const SecondUpsellPage: React.FC<SecondUpsellPageProps> = ({ variant }) =
     trackInitiateCheckout(content.rejectUrl);
     trackOfferClick(`second-upsell-${variant}-reject`);
     
-    let url = cartParams ? `${content.rejectUrl}&${cartParams}` : content.rejectUrl;
-    const urlParams = new URLSearchParams(window.location.search);
-    const cid = urlParams.get('cid');
-    if (cid && !url.includes('cid=')) {
-      url += (url.includes('?') ? '&' : '?') + 'cid=' + encodeURIComponent(cid);
-    }
+    // ✅ FIXED: Use buildUrlWithParams to include ALL tracking parameters
+    const finalUrl = buildUrlWithParams(content.rejectUrl);
     
     setTimeout(() => {
-      window.location.href = url;
+      window.location.href = finalUrl;
     }, 150);
   };
 
@@ -691,22 +684,11 @@ export const SecondUpsellPage: React.FC<SecondUpsellPageProps> = ({ variant }) =
                     trackInitiateCheckout('https://pagamento.paybluedrops.com/checkout/190510289:1');
                     trackOfferClick(`second-upsell-${variant}-high-risk`);
                     
-                    let url = 'https://pagamento.paybluedrops.com/checkout/190510289:1';
-                    
-                    // Add cart params if present
-                    if (cartParams) {
-                      url += (url.includes('?') ? '&' : '?') + cartParams;
-                    }
-                    
-                    // Add CID if present
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const cid = urlParams.get('cid');
-                    if (cid && !url.includes('cid=')) {
-                      url += (url.includes('?') ? '&' : '?') + 'cid=' + encodeURIComponent(cid);
-                    }
+                    // ✅ FIXED: Use buildUrlWithParams for high-risk offer
+                    const finalUrl = buildUrlWithParams('https://pagamento.paybluedrops.com/checkout/190510289:1');
                     
                     setTimeout(() => {
-                      window.location.href = url;
+                      window.location.href = finalUrl;
                     }, 150);
                   }}
                   className="relative w-full bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg text-sm sm:text-base border-2 border-white/40 backdrop-blur-sm overflow-hidden checkout-button"
