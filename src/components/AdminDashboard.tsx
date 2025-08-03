@@ -404,6 +404,31 @@ export const AdminDashboard: React.FC = () => {
   );
 };
 
+function App() {
+  const [showPopup, setShowPopup] = useState(false);
+  const [showUpsellPopup, setShowUpsellPopup] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState('');
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [showRestOfContent, setShowRestOfContent] = useState(false);
+  const [showPurchaseButton, setShowPurchaseButton] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isBoltEnvironment] = useState(() => {
+    return window.location.hostname.includes('bolt.new') || 
+           window.location.hostname.includes('stackblitz') ||
+           window.location.hostname.includes('localhost') ||
+           window.location.hostname.includes('127.0.0.1');
+  });
+
+  // ✅ NEW: Function to show rest of content after 35:55
+  const showRestOfContentAfterDelay = () => {
+    console.log('🎯 Showing rest of content after 35:55 delay');
+    setShowRestOfContent(true);
+    setShowPurchaseButton(true);
+    
+    // Auto-scroll to 6-bottle purchase button after a short delay
+    setTimeout(() => {
+      scrollToSixBottleButton();
+    }, 1000);
   };
 
   const navigate = useNavigate();
